@@ -2,3 +2,7 @@
 /nb-configuration.xml
 /nbactions-predict.xml
 /src/main/resources/model.bin
+/target/
+/data/guitars/
+/data/guitar-test.jpg
+/data/guitar-test2.jpg

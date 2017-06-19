@@ -16,7 +16,11 @@
 package com.github.pierrelevy.ai.imageclassifier;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Properties;
+import java.util.ResourceBundle;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.datavec.image.loader.NativeImageLoader;
@@ -32,22 +36,33 @@ import org.nd4j.linalg.dataset.api.preprocessor.ImagePreProcessingScaler;
  */
 public class App
 {
+    private static final String MODEL_BUNDLE = "conf/model.properties";
+    private static final String TRAINER_BUNDLE = "conf/trainer.properties";
 
     static Logger log = Logger.getRootLogger();
-    protected static int height = 100;
-    protected static int width = 100;
-    protected static int channels = 3;
-    protected static long seed = 42;
+    
+    private static final String KEY_HEIGHT = "height";
+    private static final String KEY_WIDTH = "width";
+    private static final String KEY_CHANNELS = "channels";
+    private static final int DEFAULT_HEIGHT = 100;
+    private static final int DEFAULT_WIDTH = 100;
+    private static final int DEFAULT_CHANNELS = 3;
+    private static final long SEED = 42;
 
-    protected static int iterations = 1;
-    protected static int epochs = 200;
-    protected static int numExamples = 500;
-    protected static int batchSize = 20;
-    protected static double splitTrainTest = 0.8;
-    protected static int listenerFreq = 1;
-    protected static int nCores = 2;
-    protected static boolean save = true;
-    protected static boolean uiserver = false;
+    private static final int iterations = 1;
+    private static final String KEY_EPOCHS = "epochs";
+    private static final String KEY_NUM_SAMPLES = "numSamples";
+    private static final String KEY_BATCH_SIZE = "batchSize";
+    private static final String KEY_DATA_PATH = "dataPath";
+    private static final int DEFAULT_EPOCHS = 2;
+    private static final int DEFAULT_NUM_SAMPLES = 10;
+    private static final int DEFAULT_BATCH_SIZE = 20;
+    private static final String DEFAULT_DATA_PATH = "data";
+    private static final double SPLIT_TRAIN_TEST = 0.8;
+    private static final int LISTENER_FREQUENCY = 1;
+    private static final int NUM_CORE = 2;
+    private static final boolean save = true;
+    private static final boolean uiserver = false;
     
 
     public static void main(String[] args) throws IOException
@@ -56,16 +71,19 @@ public class App
         {
            error();
         }
+
         
         String modelPath = FilenameUtils.concat(System.getProperty( "user.dir" ), "src/main/resources/" ) + "model.bin";
-        ModelParameters modelParameters = loadModelParameters();
+        Properties modelProperties = getProperties( MODEL_BUNDLE );
+        Properties trainerProperties = getProperties( TRAINER_BUNDLE );
+        ModelParameters modelParameters = loadModelParameters( modelProperties );
 
         if( args[0].equals( "train" ) )
         {
             String dataPath = args[1];
             int numLabels = new File( dataPath).listFiles().length;
 
-            TrainerParameters trainerParameters = loadTrainerParameter( dataPath , numLabels );
+            TrainerParameters trainerParameters = loadTrainerParameter( trainerProperties , numLabels );
             displayTrainerParameters( trainerParameters , numLabels );
 
             displayModelParameters( modelParameters );
@@ -79,7 +97,6 @@ public class App
         {
             error();
         }
-        
     }
     
     private static void error( )
@@ -127,34 +144,62 @@ public class App
         
     }
     
-    private static ModelParameters loadModelParameters()
-    {
+    private static ModelParameters loadModelParameters( Properties modelProperties ) throws IOException
+    {        
         ModelParameters parameters = new ModelParameters();
         // Model parameters values
-        parameters.setHeight(height);
-        parameters.setWidth(width);
-        parameters.setChannels(channels);
+        
+        parameters.setHeight( getInt( modelProperties , KEY_HEIGHT , DEFAULT_HEIGHT ));
+        parameters.setWidth( getInt( modelProperties , KEY_WIDTH , DEFAULT_WIDTH ));
+        parameters.setChannels( getInt( modelProperties , KEY_CHANNELS , DEFAULT_CHANNELS ));
         parameters.setIterations(iterations);
-        parameters.setSeed(seed);
+        parameters.setSeed(SEED);
         
         return parameters;
 
     }
     
-    private static TrainerParameters loadTrainerParameter( String dataPath , int numLabels )
+    private static Properties getProperties( String strFile ) throws FileNotFoundException, IOException
+    {
+        Properties properties = new Properties();
+        properties.load( new FileInputStream( strFile ));
+        return properties;        
+    }
+    
+    private static String getString( Properties properties , String key, String defaultValue )
+    {
+        return properties.getProperty( key , defaultValue );
+    }
+
+    private static int getInt( Properties properties , String key, int defaultValue )
+    {
+        int nReturn = defaultValue;
+        try
+        {
+            nReturn = Integer.parseInt( properties.getProperty( key ));
+        }
+        catch( NumberFormatException e )
+        {
+            log.error( "Error reading configuration key :" + key );
+        }
+        
+        return nReturn;
+    }
+    
+    private static TrainerParameters loadTrainerParameter( Properties trainerProperties , int numLabels ) throws IOException
     {
         TrainerParameters parameters = new TrainerParameters();
         
         // Trainers parameters values
-        parameters.setPathData( dataPath );
-        parameters.setNumLabels( numLabels );
-        parameters.setBatchSize( batchSize );
-        parameters.setEpochs( epochs );
-        parameters.setListenerFreq( listenerFreq );
-        parameters.setNumExamples( numExamples );
-        parameters.setSplitTrainTest( splitTrainTest );
-        parameters.setnCores( nCores );
+        parameters.setPathData( getString( trainerProperties , KEY_DATA_PATH , DEFAULT_DATA_PATH ));
+        parameters.setNumExamples( getInt( trainerProperties , KEY_NUM_SAMPLES , DEFAULT_NUM_SAMPLES ) );
+        parameters.setBatchSize( getInt( trainerProperties , KEY_BATCH_SIZE , DEFAULT_BATCH_SIZE ) );
+        parameters.setEpochs( getInt( trainerProperties , KEY_EPOCHS , DEFAULT_EPOCHS ) );
+        parameters.setListenerFreq( LISTENER_FREQUENCY );
+        parameters.setSplitTrainTest( SPLIT_TRAIN_TEST );
+        parameters.setnCores( NUM_CORE );
         parameters.setUIServer( uiserver );
+        parameters.setNumLabels( numLabels );
         
         return parameters;
 

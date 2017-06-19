@@ -9,8 +9,8 @@
     <url>http://maven.apache.org</url>
     
     <properties>
-        <!--     <nd4j.backend>nd4j-native-platform</nd4j.backend> -->
-        <nd4j.backend>nd4j-cuda-8.0-platform</nd4j.backend>
+             <nd4j.backend>nd4j-native-platform</nd4j.backend> 
+<!--        <nd4j.backend>nd4j-cuda-8.0-platform</nd4j.backend>-->
         <maven.compiler.source>1.7</maven.compiler.source>
         <maven.compiler.target>1.7</maven.compiler.target>
         <dl4j.version>0.8.0</dl4j.version>
@@ -43,11 +43,14 @@
             <artifactId>nd4j-native-platform</artifactId>
             <version>${dl4j.version}</version>
         </dependency>  
+        
+        <!--
         <dependency>
             <groupId>org.nd4j</groupId>
             <artifactId>nd4j-cuda-8.0</artifactId>
             <version>${dl4j.version}</version>
         </dependency>
+        -->
         <dependency>
             <groupId>org.deeplearning4j</groupId>
             <artifactId>deeplearning4j-ui_2.11</artifactId>
